@@ -30,6 +30,9 @@ protected:
 private:
 	void initGrid();
 
+	// maze 
+	Maze maze;
+
 	// Fields related to the shader and uniforms.
 	ShaderProgram m_shader;
 	GLint P_uni; // Uniform location for Projection matrix.

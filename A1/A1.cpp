@@ -19,7 +19,7 @@ static const size_t DIM = 16;
 //----------------------------------------------------------------------------------------
 // Constructor
 A1::A1()
-	: current_col( 0 )
+	: current_col( 0 ), maze(DIM)
 {
 	colour[0] = 0.0f;
 	colour[1] = 0.0f;
@@ -44,12 +44,9 @@ void A1::init()
 	// same random numbers
 	cout << "Random number seed = " << rseed << endl;
 	
-
-	// DELETE FROM HERE...
-	Maze m(DIM);
-	m.digMaze();
-	m.printMaze();
-	// ...TO HERE
+	// print maze
+	maze.digMaze();
+	maze.printMaze();
 	
 	// Set the background colour.
 	glClearColor( 0.3, 0.5, 0.7, 1.0 );
@@ -163,6 +160,10 @@ void A1::guiLogic()
 	ImGui::Begin("Debug Window", &showDebugWindow, ImVec2(100,100), opacity, windowFlags);
 		if( ImGui::Button( "Quit Application" ) ) {
 			glfwSetWindowShouldClose(m_window, GL_TRUE);
+		}
+
+		if( ImGui::Button( "Reset" ) ) {
+			maze.reset();
 		}
 
 		// Eventually you'll create multiple colour widgets with
@@ -324,6 +325,10 @@ bool A1::keyInputEvent(int key, int action, int mods) {
 		// Respond to some key events.
 		if (key == GLFW_KEY_Q) {
 			glfwSetWindowShouldClose(m_window, GL_TRUE);
+			eventHandled = true;
+		}
+		if (key == GLFW_KEY_R) {
+			maze.reset();
 			eventHandled = true;
 		}
 	}
