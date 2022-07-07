@@ -1,5 +1,3 @@
-// Termm--Winter 2021
-
 #include "A1.hpp"
 
 int main( int argc, char **argv ) 

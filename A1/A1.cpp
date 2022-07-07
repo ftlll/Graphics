@@ -1,5 +1,3 @@
-// Termm--Fall 2020
-
 #include "A1.hpp"
 #include "cs488-framework/GlErrorCheck.hpp"
 
