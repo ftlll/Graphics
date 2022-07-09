@@ -126,6 +126,9 @@ void A1::initGrid()
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 
+	// OpenGL has the buffer now, there's no need for us to keep a copy.
+	delete [] verts;
+
 	CHECK_GL_ERRORS;
 }
 
