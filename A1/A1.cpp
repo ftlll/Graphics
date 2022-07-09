@@ -44,7 +44,7 @@ void A1::init()
 	// same random numbers
 	cout << "Random number seed = " << rseed << endl;
 	
-	// print maze
+	// init and print maze
 	maze.digMaze();
 	maze.printMaze();
 	
@@ -66,7 +66,8 @@ void A1::init()
 	col_uni = m_shader.getUniformLocation( "colour" );
 
 	initGrid();
-
+	initCube();
+	
 	// Set up initial view and projection matrices (need to do this here,
 	// since it depends on the GLFW window being set up correctly).
 	view = glm::lookAt( 
@@ -125,8 +126,77 @@ void A1::initGrid()
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 
-	// OpenGL has the buffer now, there's no need for us to keep a copy.
-	delete [] verts;
+	CHECK_GL_ERRORS;
+}
+
+void A1::initCube()
+{
+	float verts[] = {
+		// front bottom left
+		0.0f, 0.0f, 1.0f,
+		// front top left
+		0.0f, cube_height, 1.0f,
+		// front top right
+		1.0f, cube_height, 1.0f,
+		// front bottom right
+		1.0f, 0.0f, 1.0f,
+		// back top right
+		1.0f, cube_height, 0.0f,
+		// back bottom right
+		1.0f, 0.0f, 0.0f,
+		// back top left
+		0.0f, cube_height, 0.0f,
+		// back bottom left
+		0.0f, 0.0f, 0.0f
+	};
+	
+	unsigned int indices[] = {
+		// front
+		0, 1, 2,
+		0, 2, 3,
+		// left
+		2, 3, 4,
+		3, 4, 5,
+		// back
+		4, 5, 6,
+		5, 6, 7,
+		// right
+		0, 1, 6,
+		0, 6, 7,
+		// top
+		1, 2, 6,
+		2, 4 ,6,
+		// bottom
+		0, 3, 7,
+		3, 5, 7
+	};
+
+	// Create the vertex array to record buffer assignments.
+	glGenVertexArrays( 1, &m_cube_vao );
+	glBindVertexArray( m_cube_vao );
+
+	// Create the cube vertex buffer
+	glGenBuffers( 1, &m_cube_vbo );
+	glBindBuffer( GL_ARRAY_BUFFER, m_cube_vbo );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(verts),
+		verts, GL_STATIC_DRAW );
+
+	// Create the cube element buffer
+	glGenBuffers( 1, &m_cube_ebo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_cube_ebo );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(indices),
+		indices, GL_STATIC_DRAW );
+
+	// Specify the means of extracting the position values properly.
+	GLint posAttrib = m_shader.getAttribLocation( "position" );
+	glEnableVertexAttribArray( posAttrib );
+	glVertexAttribPointer( posAttrib, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
+
+	// Reset state to prevent rogue code from messing with *my* 
+	// stuff!
+	glBindVertexArray( 0 );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 
 	CHECK_GL_ERRORS;
 }
@@ -329,6 +399,17 @@ bool A1::keyInputEvent(int key, int action, int mods) {
 		}
 		if (key == GLFW_KEY_R) {
 			maze.reset();
+			eventHandled = true;
+		}
+		if (key == GLFW_KEY_SPACE) {
+			if (cube_height < 2.0f) cube_height += 0.1f;
+			initCube();
+			eventHandled = true;
+		}
+
+		if (key == GLFW_KEY_BACKSPACE) {
+			if (cube_height > 0) cube_height -= 0.1f;
+			initCube();
 			eventHandled = true;
 		}
 	}
