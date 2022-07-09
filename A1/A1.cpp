@@ -69,7 +69,8 @@ void A1::init()
 
 	initGrid();
 	initCube();
-	
+	initFloor();
+
 	// Set up initial view and projection matrices (need to do this here,
 	// since it depends on the GLFW window being set up correctly).
 	view = glm::lookAt( 
@@ -206,9 +207,48 @@ void A1::initCube()
 	CHECK_GL_ERRORS;
 }
 
+void A1::initFloor()
+{
+	size_t sz = 3 * 2 * 3;
+
+	float verts[] = {
+		0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f,
+
+		0.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f,
+	};
+
+	// Create the vertex array to recoblock_colorrd buffer assignments.
+	glGenVertexArrays( 1, &m_floor_vao );
+	glBindVertexArray( m_floor_vao );
+
+	// Create the cube vertex buffer
+	glGenBuffers( 1, &m_floor_vbo );
+	glBindBuffer( GL_ARRAY_BUFFER, m_floor_vbo );
+	glBufferData( GL_ARRAY_BUFFER, sz*sizeof(float),
+		verts, GL_STATIC_DRAW );
+
+	// Specify the means of extracting the position values properly.
+	GLint posAttrib = m_shader.getAttribLocation( "position" );
+	glEnableVertexAttribArray( posAttrib );
+	glVertexAttribPointer( posAttrib, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
+
+	// Reset state to prevent rogue code from messing with *my* 
+	// stuff!
+	glBindVertexArray( 0 );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+
+	CHECK_GL_ERRORS;
+}
+
 void A1::initSettings() {
 	cube_height = 1.0f;
 	cube_color = vec3(0.0f, 1.0f, 1.0f);
+	floor_color = vec3(0.0f, 0.5f, 1.0f);
 }
 
 //----------------------------------------------------------------------------------------
@@ -313,16 +353,16 @@ void A1::draw()
 				glUniformMatrix4fv( M_uni, 1, GL_FALSE, value_ptr( W ) );
 				
 				if (i-1 == -1 || j - 1 == -1 || i - 1 == DIM || j - 1 == DIM 
-				|| maze.getValue(i-1,j-1) == 0) {
-					// draw floors
-					
-				} else {
+				|| maze.getValue(i-1,j-1) == 1) {
 					// draw cubes
-
-					//cout << "i is " << i << " j is " << j << endl;
 					glBindVertexArray( m_cube_vao );
 					glUniform3f( col_uni, cube_color.r, cube_color.g, cube_color.b );
-					glDrawElements( GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+					glDrawElements( GL_TRIANGLES, 3*12, GL_UNSIGNED_INT, 0);
+				} else {
+					// draw floors
+					glBindVertexArray( m_floor_vao );
+					glUniform3f( col_uni, floor_color.r, floor_color.g, floor_color.b );
+					glDrawArrays( GL_TRIANGLES, 0, 6 );
 				}
 				W = origin;
 			}

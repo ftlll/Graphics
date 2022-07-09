@@ -30,6 +30,7 @@ protected:
 private:
 	void initGrid();
 	void initCube();
+	void initFloor();
 	void initSettings();
 	// maze 
 	Maze maze;
@@ -52,6 +53,10 @@ private:
 	GLuint m_cube_vao; // Vertex Array Object
 	GLuint m_cube_vbo; // Vertex Buffer Object
 	GLuint m_cube_ebo; // Element Bufffer Object
+
+	// Fields related to floor geometry.
+	GLuint m_floor_vao; // Vertex Array Object
+	GLuint m_floor_vbo; // Vertex Buffer Object
 
 	// Matrices controlling the camera and projection.
 	glm::mat4 proj;
