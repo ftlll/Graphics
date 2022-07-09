@@ -208,6 +208,7 @@ void A1::initCube()
 
 void A1::initSettings() {
 	cube_height = 1.0f;
+	cube_color = vec3(0.0f, 1.0f, 1.0f);
 }
 
 //----------------------------------------------------------------------------------------
@@ -305,6 +306,28 @@ void A1::draw()
 		glDrawArrays( GL_LINES, 0, (3+DIM)*4 );
 
 		// Draw the cubes
+		mat4 origin = W;
+		for (int i = 0; i < DIM + 2; i++) {
+			for (int j = 0; j < DIM + 2; j++) {
+				W = glm::translate( W, vec3( i - 1, 0, j - 1) );
+				glUniformMatrix4fv( M_uni, 1, GL_FALSE, value_ptr( W ) );
+				
+				if (i-1 == -1 || j - 1 == -1 || i - 1 == DIM || j - 1 == DIM 
+				|| maze.getValue(i-1,j-1) == 0) {
+					// draw floors
+					
+				} else {
+					// draw cubes
+
+					//cout << "i is " << i << " j is " << j << endl;
+					glBindVertexArray( m_cube_vao );
+					glUniform3f( col_uni, cube_color.r, cube_color.g, cube_color.b );
+					glDrawElements( GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+				}
+				W = origin;
+			}
+		}
+
 		// Highlight the active square.
 	m_shader.disable();
 

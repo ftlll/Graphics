@@ -57,6 +57,11 @@ private:
 	glm::mat4 proj;
 	glm::mat4 view;
 
+	// Cube, floor, avatar colors
+	glm::vec3 cube_color;
+	glm::vec3 floor_color;
+	glm::vec3 avatar_color;
+
 	float colour[3];
 	int current_col;
 };
