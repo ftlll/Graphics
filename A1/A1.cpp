@@ -44,6 +44,8 @@ void A1::init()
 	// same random numbers
 	cout << "Random number seed = " << rseed << endl;
 	
+	initSettings();
+
 	// init and print maze
 	maze.digMaze();
 	maze.printMaze();
@@ -204,6 +206,10 @@ void A1::initCube()
 	CHECK_GL_ERRORS;
 }
 
+void A1::initSettings() {
+	cube_height = 1.0f;
+}
+
 //----------------------------------------------------------------------------------------
 /*
  * Called once per frame, before guiLogic().
@@ -237,6 +243,7 @@ void A1::guiLogic()
 
 		if( ImGui::Button( "Reset" ) ) {
 			maze.reset();
+			initSettings();
 		}
 
 		// Eventually you'll create multiple colour widgets with
@@ -402,6 +409,7 @@ bool A1::keyInputEvent(int key, int action, int mods) {
 		}
 		if (key == GLFW_KEY_R) {
 			maze.reset();
+			initSettings();
 			eventHandled = true;
 		}
 		if (key == GLFW_KEY_SPACE) {
