@@ -353,16 +353,16 @@ void A1::draw()
 				glUniformMatrix4fv( M_uni, 1, GL_FALSE, value_ptr( W ) );
 				
 				if (i-1 == -1 || j - 1 == -1 || i - 1 == DIM || j - 1 == DIM 
-				|| maze.getValue(i-1,j-1) == 1) {
-					// draw cubes
-					glBindVertexArray( m_cube_vao );
-					glUniform3f( col_uni, cube_color.r, cube_color.g, cube_color.b );
-					glDrawElements( GL_TRIANGLES, 3*12, GL_UNSIGNED_INT, 0);
-				} else {
+				|| maze.getValue(i-1,j-1) == 0) {
 					// draw floors
 					glBindVertexArray( m_floor_vao );
 					glUniform3f( col_uni, floor_color.r, floor_color.g, floor_color.b );
 					glDrawArrays( GL_TRIANGLES, 0, 6 );
+				} else {
+					// draw cubes
+					glBindVertexArray( m_cube_vao );
+					glUniform3f( col_uni, cube_color.r, cube_color.g, cube_color.b );
+					glDrawElements( GL_TRIANGLES, 3*12, GL_UNSIGNED_INT, 0);
 				}
 				W = origin;
 			}
