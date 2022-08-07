@@ -391,6 +391,7 @@ void A1::initSettings() {
 void A1::appLogic()
 {
 	// Place per frame, application logic here ...
+	rotate_proportion += self_rotate_rate;
 }
 
 //----------------------------------------------------------------------------------------
@@ -543,6 +544,15 @@ void A1::draw()
 			}
 		}
 
+	// draw the avatar
+	glBindVertexArray( m_avatar_vao );
+	glUniform3f( col_uni, avatar_color.r, avatar_color.g, avatar_color.b );
+	W = glm::translate( W, avatar_pos + vec3(Avatar_Radius));
+	glUniformMatrix4fv( M_uni, 1, GL_FALSE, value_ptr( W ) );
+	glDrawArrays( GL_TRIANGLES, 0, 360*180*2*3);
+	W = origin;
+
+
 		// Highlight the active square.
 	m_shader.disable();
 
@@ -587,6 +597,15 @@ bool A1::mouseMoveEvent(double xPos, double yPos)
 		// Probably need some instance variables to track the current
 		// rotation amount, and maybe the previous X position (so 
 		// that you can rotate relative to the *change* in X.
+		double hori_pos = xPos;
+		if (ImGui::IsMouseDragging(0)) {
+			rotate_proportion += (hori_pos - last_mouse_pos) / DRR;
+			self_rotate_rate = (hori_pos - last_mouse_pos) / DRR;
+			drag = true;
+		}
+		last_mouse_pos = hori_pos;
+
+		eventHandled = true;
 	}
 
 	return eventHandled;
@@ -602,6 +621,19 @@ bool A1::mouseButtonInputEvent(int button, int actions, int mods) {
 	if (!ImGui::IsMouseHoveringAnyWindow()) {
 		// The user clicked in the window.  If it's the left
 		// mouse button, initiate a rotation.
+		if (actions == GLFW_PRESS) {
+			drag = false;
+			eventHandled = true;
+		}
+		if (actions == GLFW_RELEASE) {
+			if (drag) {
+				drag = false;
+			} else {
+				self_rotate_rate = 0.0f;
+			}
+			
+			eventHandled = true;
+		}
 	}
 
 	return eventHandled;
