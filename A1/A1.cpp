@@ -689,6 +689,23 @@ bool A1::keyInputEvent(int key, int action, int mods) {
 			initSettings();
 			eventHandled = true;
 		}
+
+		if (key == GLFW_KEY_D) {
+			maze.digMaze();
+			// find avatar start position
+			for (size_t i = 0; i < DIM; i++) {
+				for (size_t j = 0; j < DIM; j++) {
+					// find the entrance
+					if (i == DIM-1 || i == 0 || j == DIM-1 || j == 0) {
+						if (maze.getValue(i,j) == 0) {
+							avatar_pos = vec3(i,0,j);
+						}
+					}
+				}
+			}
+			eventHandled = true;
+		}
+
 		if (key == GLFW_KEY_SPACE) {
 			if (cube_height < 2.0f) cube_height += 0.1f;
 			initCube();
@@ -698,6 +715,54 @@ bool A1::keyInputEvent(int key, int action, int mods) {
 		if (key == GLFW_KEY_BACKSPACE) {
 			if (cube_height > 0) cube_height -= 0.1f;
 			initCube();
+			eventHandled = true;
+		}
+
+		if (key == GLFW_KEY_LEFT && avatar_pos.x - 1 >= -1) {
+			if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+				glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
+				maze.setValue(avatar_pos.x - 1,avatar_pos.z, 0);
+				avatar_pos.x -= 1;
+			}
+			else if (maze.getValue(avatar_pos.x - 1,avatar_pos.z) == 0) {
+				avatar_pos.x -= 1;
+			}
+			eventHandled = true;
+		}
+
+		if (key == GLFW_KEY_RIGHT && avatar_pos.x + 1 <= DIM) {
+			if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+				glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
+				maze.setValue(avatar_pos.x + 1,avatar_pos.z, 0);
+				avatar_pos.x += 1;
+			}
+			else if (maze.getValue(avatar_pos.x + 1,avatar_pos.z) == 0) {
+				avatar_pos.x += 1;
+			}
+			eventHandled = true;
+		}
+
+		if (key == GLFW_KEY_UP && avatar_pos.z - 1 >= -1) {
+			if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+				glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
+				maze.setValue(avatar_pos.x,avatar_pos.z - 1, 0);
+				avatar_pos.z -= 1;
+			}
+			else if (maze.getValue(avatar_pos.x,avatar_pos.z - 1) == 0) {
+				avatar_pos.z -= 1;
+			}
+			eventHandled = true;
+		}
+
+		if (key == GLFW_KEY_DOWN && avatar_pos.z + 1 <= DIM) {
+			if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+				glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
+					maze.setValue(avatar_pos.x,avatar_pos.z + 1, 0);
+					avatar_pos.z += 1;
+			}
+			else if (maze.getValue(avatar_pos.x,avatar_pos.z + 1) == 0) {
+				avatar_pos.z += 1;
+			}
 			eventHandled = true;
 		}
 	}
