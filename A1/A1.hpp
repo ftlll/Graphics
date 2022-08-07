@@ -30,6 +30,7 @@ protected:
 private:
 	void initGrid();
 	void initCube();
+	void initAvatar();
 	void initFloor();
 	void initSettings();
 	// maze 

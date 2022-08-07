@@ -16,6 +16,8 @@ using namespace std;
 
 static const size_t DIM = 16;
 
+// consts
+static const float PAI = 3.14159;
 static const float ScaleRate = 0.1f;
 static const float ScaleUpRange = 2.0f;
 static const float ScaleLowRange = 0.5f;
@@ -74,6 +76,7 @@ void A1::init()
 	initGrid();
 	initCube();
 	initFloor();
+	initAvatar();
 
 	// Set up initial view and projection matrices (need to do this here,
 	// since it depends on the GLFW window being set up correctly).
@@ -245,6 +248,74 @@ void A1::initFloor()
 	glBindVertexArray( 0 );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+
+	CHECK_GL_ERRORS;
+}
+
+void A1::initAvatar() {
+	// a semi-circle vertices
+	size_t sphere_sz = 180 * 3 * 360 * 2 * 3;
+	float* verts = new float[sphere_sz];
+	size_t index = 0;
+	float r = Avatar_Radius;
+	// rotate semi-circle by y-axis
+	for (int alpha = 0; alpha < 360; alpha++) {
+
+		// semi-circle
+		for (int beta = 90; beta > -90; beta--) {
+			// first triangle 
+			verts[index + 0] = r * cos(beta * PAI / 180.0f) * cos(alpha * PAI / 180.0f); // x
+			verts[index + 1] = r * sin(beta * PAI / 180.0f); // y
+			verts[index + 2] = r * cos(beta * PAI / 180.0f) * sin(alpha * PAI / 180.0f); // z
+
+			verts[index + 3] = r * cos((beta-1) * PAI / 180.0f) * cos(alpha * PAI / 180.0f); 
+			verts[index + 4] = r * sin((beta-1) * PAI / 180.0f); 
+			verts[index + 5] = r * cos((beta-1) * PAI / 180.0f) * sin(alpha * PAI / 180.0f); 
+
+			verts[index + 6] = r * cos(beta * PAI / 180.0f) * cos((alpha+1) * PAI / 180.0f); 
+			verts[index + 7] = r * sin(beta * PAI / 180.0f); 
+			verts[index + 8] = r * cos(beta * PAI / 180.0f) * sin((alpha+1) * PAI / 180.0f); 
+
+			// second triangle
+			verts[index + 9] = r * cos((beta-1) * PAI / 180.0f) * cos(alpha * PAI / 180.0f); 
+			verts[index + 10] = r * sin((beta-1) * PAI / 180.0f); 
+			verts[index + 11] = r * cos((beta-1) * PAI / 180.0f) * sin(alpha * PAI / 180.0f); 
+
+			verts[index + 12] = r * cos(beta * PAI / 180.0f) * cos((alpha+1) * PAI / 180.0f); 
+			verts[index + 13] = r * sin(beta * PAI / 180.0f); 
+			verts[index + 14] = r * cos(beta * PAI / 180.0f) * sin((alpha+1) * PAI / 180.0f); 
+
+			verts[index + 15] = r * cos((beta-1) * PAI / 180.0f) * cos((alpha+1) * PAI / 180.0f); 
+			verts[index + 16] = r * sin((beta-1) * PAI / 180.0f); 
+			verts[index + 17] = r * cos((beta-1) * PAI / 180.0f) * sin((alpha+1) * PAI / 180.0f); 
+
+			index += 18;
+		}
+	}
+
+	// Create the vertex array to recoblock_colorrd buffer assignments.
+	glGenVertexArrays( 1, &m_avatar_vao );
+	glBindVertexArray( m_avatar_vao );
+
+	// Create the avatar vertex buffer
+	glGenBuffers( 1, &m_avatar_vbo );
+	glBindBuffer( GL_ARRAY_BUFFER, m_avatar_vbo );
+	glBufferData( GL_ARRAY_BUFFER, sphere_sz*sizeof(float),
+		verts, GL_STATIC_DRAW );
+
+	// Specify the means of extracting the position values properly.
+	GLint posAttrib = m_shader.getAttribLocation( "position" );
+	glEnableVertexAttribArray( posAttrib );
+	glVertexAttribPointer( posAttrib, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
+
+	// Reset state to prevent rogue code from messing with *my* 
+	// stuff!
+	glBindVertexArray( 0 );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+
+	// OpenGL has the buffer now, there's no need for us to keep a copy.
+	delete [] verts;
 
 	CHECK_GL_ERRORS;
 }
