@@ -56,6 +56,18 @@ void A1::init()
 	maze.digMaze();
 	maze.printMaze();
 	
+	// find avatar start position
+	for (size_t i = 0; i < DIM; i++) {
+		for (size_t j = 0; j < DIM; j++) {
+			// find the entrance
+			if (i == DIM-1 || i == 0 || j == DIM-1 || j == 0) {
+				if (maze.getValue(i,j) == 0) {
+					avatar_pos = vec3(i,0,j);
+				}
+			}
+		}
+	}
+
 	// Set the background colour.
 	glClearColor( 0.3, 0.5, 0.7, 1.0 );
 
