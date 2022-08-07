@@ -16,6 +16,10 @@ using namespace std;
 
 static const size_t DIM = 16;
 
+static const float ScaleRate = 0.1f;
+static const float ScaleUpRange = 2.0f;
+static const float ScaleLowRange = 0.5f;
+
 //----------------------------------------------------------------------------------------
 // Constructor
 A1::A1()
