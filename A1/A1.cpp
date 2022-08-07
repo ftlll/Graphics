@@ -440,6 +440,12 @@ bool A1::mouseScrollEvent(double xOffSet, double yOffSet) {
 	bool eventHandled(false);
 
 	// Zoom in or out.
+	if (yOffSet > 0) {
+		if (scale < ScaleUpRange) scale += ScaleRate;
+	} else {
+		if (scale > ScaleLowRange) scale -= ScaleRate;
+	}
+
 
 	return eventHandled;
 }

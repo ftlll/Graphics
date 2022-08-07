@@ -69,4 +69,11 @@ private:
 
 	float colour[3];
 	int current_col;
+
+	// rotation, scroll and resize
+	bool drag;
+	double last_mouse_pos;
+	float rotate_proportion;
+	float self_rotate_rate;
+	float scale;
 };
