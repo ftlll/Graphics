@@ -83,9 +83,7 @@ private:
 	// last object(block. floor or avatar)
 	int last_obj;
 
-	float colour[3];
 	float origin_colour[3];
-	int current_col;
 
 	// rotation, scroll and resize
 	bool drag;
