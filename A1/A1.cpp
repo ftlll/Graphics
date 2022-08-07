@@ -338,7 +338,7 @@ void A1::loadColor(int selected_obj, float * color) {
 	switch (selected_obj) {
 		// block
 		case 0:
-			tmp_color = block_color;
+			tmp_color = cube_color;
 			break;
 		case 1:
 			tmp_color = floor_color;
@@ -359,7 +359,7 @@ void A1::saveColor(int selected_obj, float * color) {
 	switch (selected_obj) {
 		// block
 		case 0:
-			block_color = tmp_color;
+			cube_color = tmp_color;
 			break;
 		case 1:
 			floor_color = tmp_color;
