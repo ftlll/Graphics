@@ -59,6 +59,10 @@ private:
 	GLuint m_floor_vao; // Vertex Array Object
 	GLuint m_floor_vbo; // Vertex Buffer Object
 
+	// Fields related to Avatar geometry.
+	GLuint m_avatar_vao; // Vertex Array Object
+	GLuint m_avatar_vbo; // Vertex Buffer Object
+
 	// Matrices controlling the camera and projection.
 	glm::mat4 proj;
 	glm::mat4 view;

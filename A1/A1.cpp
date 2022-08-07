@@ -21,6 +21,7 @@ static const float PAI = 3.14159;
 static const float ScaleRate = 0.1f;
 static const float ScaleUpRange = 2.0f;
 static const float ScaleLowRange = 0.5f;
+static float Avatar_Radius = 0.5f; 
 
 //----------------------------------------------------------------------------------------
 // Constructor
