@@ -36,6 +36,9 @@ private:
 	// maze 
 	Maze maze;
 
+	// avatar position
+	glm::vec3 avatar_pos;
+
 	// cube height
 	float cube_height;
 
