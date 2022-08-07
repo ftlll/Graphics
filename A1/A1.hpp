@@ -32,6 +32,8 @@ private:
 	void initCube();
 	void initAvatar();
 	void initFloor();
+	void loadColor(int obj, float * color);
+	void saveColor(int obj, float * color);
 	void initSettings();
 	// maze 
 	Maze maze;
@@ -76,6 +78,13 @@ private:
 	glm::vec3 avatar_color;
 
 	float colour[3];
+	int current_col;
+
+	// last object(block. floor or avatar)
+	int last_obj;
+
+	float colour[3];
+	float origin_colour[3];
 	int current_col;
 
 	// rotation, scroll and resize

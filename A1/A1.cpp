@@ -333,10 +333,55 @@ void A1::initAvatar() {
 	CHECK_GL_ERRORS;
 }
 
+void A1::loadColor(int selected_obj, float * color) {
+	vec3 tmp_color(0.0f,0.0f,0.0f);
+	switch (selected_obj) {
+		// block
+		case 0:
+			tmp_color = block_color;
+			break;
+		case 1:
+			tmp_color = floor_color;
+			break;
+		case 2:
+			tmp_color = avatar_color;
+			break;
+		default:
+			break;
+	}
+	color[0] = tmp_color.r;
+	color[1] = tmp_color.g;
+	color[2] = tmp_color.b;
+}
+
+void A1::saveColor(int selected_obj, float * color) {
+	vec3 tmp_color(color[0], color[1], color[2]);
+	switch (selected_obj) {
+		// block
+		case 0:
+			block_color = tmp_color;
+			break;
+		case 1:
+			floor_color = tmp_color;
+			break;
+		case 2:
+			avatar_color = tmp_color;
+			break;
+		default:
+			break;
+	}
+}
+
 void A1::initSettings() {
+	last_obj = -1;
+	scale = 1.0f;
 	cube_height = 1.0f;
+	rotate_proportion = 0.0f;
+	self_rotate_rate = 0.0f;
+	avatar_pos = vec3(0.0f, 0.0f, 0.0f);
 	cube_color = vec3(0.0f, 1.0f, 1.0f);
 	floor_color = vec3(0.0f, 0.5f, 1.0f);
+	avatar_color = vec3(1.0f, 0.0f, 0.0f);
 }
 
 //----------------------------------------------------------------------------------------
@@ -375,6 +420,22 @@ void A1::guiLogic()
 			initSettings();
 		}
 
+		// 3
+		if( ImGui::Button( "Dig" ) ) {
+			maze.digMaze();
+			// find avatar start position
+			for (size_t i = 0; i < DIM; i++) {
+				for (size_t j = 0; j < DIM; j++) {
+					// find the entrance
+					if (i == DIM-1 || i == 0 || j == DIM-1 || j == 0) {
+						if (maze.getValue(i,j) == 0) {
+							avatar_pos = vec3(i,0,j);
+						}
+					}
+				}
+			}
+		}
+
 		// Eventually you'll create multiple colour widgets with
 		// radio buttons.  If you use PushID/PopID to give them all
 		// unique IDs, then ImGui will be able to keep them separate.
@@ -384,11 +445,34 @@ void A1::guiLogic()
 		// Prefixing a widget name with "##" keeps it from being
 		// displayed.
 
+		ImGui::PushID("widget");
+		static int selected_obj = 0;
+        ImGui::RadioButton("Block", &selected_obj, 0); ImGui::SameLine();
+        ImGui::RadioButton("Floor", &selected_obj, 1); ImGui::SameLine();
+        ImGui::RadioButton("Avatar", &selected_obj, 2);
+		ImGui::PopID();
+
+		if (last_obj != selected_obj) {
+
+			// save original color to current selected_object
+			saveColor(last_obj, origin_colour);
+
+			// load  new selected_object's information to original color and color variable
+			loadColor(selected_obj, colour);
+			loadColor(selected_obj, origin_colour);
+			last_obj = selected_obj;
+		}
+
+		// Prefixing a widget name with "##" keeps it from being
+		// displayed.
+
 		ImGui::PushID( 0 );
+		
 		ImGui::ColorEdit3( "##Colour", colour );
 		ImGui::SameLine();
 		if( ImGui::RadioButton( "##Col", &current_col, 0 ) ) {
 			// Select this colour.
+			loadColor(selected_obj, origin_colour);
 		}
 		ImGui::PopID();
 
@@ -419,6 +503,9 @@ void A1::draw()
 {
 	// Create a global transformation for the model (centre it).
 	mat4 W;
+
+	W = glm::scale(W, vec3(scale));
+	W = glm::rotate( W, 2 * PAI * rotate_proportion, vec3( 0, 1, 0) );
 	W = glm::translate( W, vec3( -float(DIM)/2.0f, 0, -float(DIM)/2.0f ) );
 
 	m_shader.enable();
