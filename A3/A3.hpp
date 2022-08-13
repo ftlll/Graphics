@@ -1,4 +1,4 @@
-// Termm-Fall 2020
+// Winter 2019
 
 #pragma once
 
@@ -8,14 +8,44 @@
 #include "cs488-framework/MeshConsolidator.hpp"
 
 #include "SceneNode.hpp"
+#include "JointNode.hpp"
 
 #include <glm/glm.hpp>
 #include <memory>
+#include <set>
+#include <stack>
+#include <unordered_map>
+#include <vector>
 
 struct LightSource {
 	glm::vec3 position;
 	glm::vec3 rgbIntensity;
 };
+
+// data structure to implement undo and redo
+struct JointsInfo {
+	JointNode* jointNode;
+	float cur_angleX;
+	float cur_angleY;
+	bool isSelected;
+    glm::mat4 trans;
+
+	JointsInfo(JointNode* node) {
+		jointNode = node;
+		cur_angleX = node->cur_angleX;
+		cur_angleY = node->cur_angleY;
+		isSelected = node->isSelected;
+		trans = node->trans;
+	}
+
+	void apply() {
+		jointNode->cur_angleX = cur_angleX;
+		jointNode->cur_angleY = cur_angleY;
+		jointNode->isSelected = isSelected;
+		jointNode->trans = trans;
+	}
+};
+
 
 
 class A3 : public CS488Window {
@@ -51,9 +81,24 @@ protected:
 	void uploadCommonSceneUniforms();
 	void renderSceneGraph(const SceneNode &node);
 	void renderArcCircle();
+	void renderNode(const SceneNode * root, glm::mat4 view, glm::mat4 model);
+	void applyPositionChange(double xPos, double yPos);
+	void applyJointsChange(double xPos, double yPos);
+	void pickingSetup();
+	JointNode * findJoint(unsigned int objID, SceneNode * root);
+	void resetPosition();
+	void resetRotation();
+	void resetJoints(SceneNode * node);
+	void resetAll();
+	void undoOperation();
+	void redoOperation();
+	void saveState();
 
 	glm::mat4 m_perpsective;
 	glm::mat4 m_view;
+
+	glm::mat4 translateTrans;
+  	glm::mat4 rotateTrans;
 
 	LightSource m_light;
 
@@ -79,4 +124,34 @@ protected:
 	std::string m_luaSceneFile;
 
 	std::shared_ptr<SceneNode> m_rootNode;
+
+	// Options 
+	bool trackBall;
+	bool zBuffer;
+	bool backCulling;
+	bool frontCulling;
+
+	// Mode
+	enum Mode {Position, Joints};
+	int mode;
+
+	// Mouse properties
+	bool mouse_leftdown;
+	bool mouse_middledown;
+	bool mouse_rightdown;
+
+	double mouseLastX;
+	double mouseLastY;
+
+	// trackballinformation
+	glm::vec3 lastTrackball;
+
+	bool picking;
+
+	std::set<JointNode*> selectedJoints;
+
+	// undo redo
+	std::vector<JointsInfo> oldInfo;
+	std::stack<std::vector<JointsInfo>> undo;
+	std::stack<std::vector<JointsInfo>> redo;
 };

@@ -1,4 +1,4 @@
-// Termm-Fall 2020
+// Winter 2019
 
 #pragma once
 
@@ -16,6 +16,10 @@ public:
 		double min, init, max;
 	};
 
+	void rotate(char axis, float angle) override;
+
+	float cur_angleX;
+	float cur_angleY;
 
 	JointRange m_joint_x, m_joint_y;
 };

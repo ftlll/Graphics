@@ -1,4 +1,4 @@
-// Term-Winter 2021
+// Winter 2019
 
 #include "A3.hpp"
 
@@ -9,7 +9,7 @@ int main( int argc, char **argv )
 {
 	if (argc > 1) {
 		std::string luaSceneFile(argv[1]);
-		std::string title("W21 Assignment 3 - [");
+		std::string title("** Assignment 3 - [");
 		title += luaSceneFile;
 		title += "]";
 
