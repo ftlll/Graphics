@@ -1,5 +1,3 @@
-// Term-Winter 2021
-
 #include "A3.hpp"
 
 #include <iostream>

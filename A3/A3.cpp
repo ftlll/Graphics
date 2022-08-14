@@ -1,5 +1,3 @@
-// Termm-Fall 2020
-
 #include "A3.hpp"
 #include "scene_lua.hpp"
 using namespace std;

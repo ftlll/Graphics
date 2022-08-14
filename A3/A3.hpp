@@ -1,5 +1,3 @@
-// Termm-Fall 2020
-
 #pragma once
 
 #include "cs488-framework/CS488Window.hpp"
