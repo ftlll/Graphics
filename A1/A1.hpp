@@ -29,6 +29,10 @@ protected:
 
 private:
 	void initGrid();
+	void initFloor();
+	void initCube();
+	void initSettings();
+	Maze maze;
 
 	// Fields related to the shader and uniforms.
 	ShaderProgram m_shader;
@@ -41,10 +45,34 @@ private:
 	GLuint m_grid_vao; // Vertex Array Object
 	GLuint m_grid_vbo; // Vertex Buffer Object
 
+	// Fields related to Cube geometry.
+	GLuint m_cube_vao; // Vertex Array Object
+	GLuint m_cube_vbo; // Vertex Buffer Object
+	GLuint m_cube_ebo; // Element Buffer Object
+
+	// Fields related to Avatar geometry.
+	GLuint m_avatar_vao; // Vertex Array Object
+	GLuint m_avatar_vbo; // Vertex Buffer Object
+
+	// Fields related to Floor geometry.
+	GLuint m_floor_vao; // Vertex Array Object
+	GLuint m_floor_vbo; // Vertex Buffer Object
+
 	// Matrices controlling the camera and projection.
 	glm::mat4 proj;
 	glm::mat4 view;
 
+	void loadColor(int obj, float * color);
+	void saveColor(int obj, float * color);
+
+	// Block, floor, avatar colors
+	glm::vec3 block_color;
+	glm::vec3 floor_color;
+	glm::vec3 avatar_color;
+
 	float colour[3];
+	float origin_colour[3];
 	int current_col;
+	float block_height;
+	int last_obj;
 };

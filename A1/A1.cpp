@@ -16,10 +16,15 @@ using namespace std;
 
 static const size_t DIM = 16;
 
+// consts
+const float PI = 3.14159265f;
+const float MIN_HEIGHT = 0.5f;
+const float MAX_HEIGHT = 1.5f;
+
 //----------------------------------------------------------------------------------------
 // Constructor
 A1::A1()
-	: current_col( 0 )
+	: current_col( 0 ), maze(DIM)
 {
 	colour[0] = 0.0f;
 	colour[1] = 0.0f;
@@ -44,12 +49,10 @@ void A1::init()
 	// same random numbers
 	cout << "Random number seed = " << rseed << endl;
 	
-
-	// DELETE FROM HERE...
-	Maze m(DIM);
-	m.digMaze();
-	m.printMaze();
-	// ...TO HERE
+	// init settings and maze
+	initSettings();
+	maze.digMaze();
+	maze.printMaze();
 	
 	// Set the background colour.
 	glClearColor( 0.3, 0.5, 0.7, 1.0 );
@@ -69,6 +72,8 @@ void A1::init()
 	col_uni = m_shader.getUniformLocation( "colour" );
 
 	initGrid();
+	initFloor();
+	initCube();
 
 	// Set up initial view and projection matrices (need to do this here,
 	// since it depends on the GLFW window being set up correctly).
@@ -81,6 +86,53 @@ void A1::init()
 		glm::radians( 30.0f ),
 		float( m_framebufferWidth ) / float( m_framebufferHeight ),
 		1.0f, 1000.0f );
+}
+
+void A1::initSettings()
+{
+	last_obj= -1;
+	block_height = 1.0f;
+	block_color = vec3(0.0f, 1.0f, 1.0f);
+	floor_color = vec3(0.0f, 0.5f, 1.0f);
+	avatar_color = vec3(1.0f, 0.0f, 0.0f);
+}
+
+void A1::loadColor(int selected_obj, float * color) {
+	vec3 tmp_color(0.0f,0.0f,0.0f);
+	switch (selected_obj) {
+		case 0:
+			tmp_color = block_color;
+			break;
+		case 1:
+			tmp_color = floor_color;
+			break;
+		case 2:
+			tmp_color = avatar_color;
+			break;
+		default:
+			break;
+	}
+	color[0] = tmp_color.r;
+	color[1] = tmp_color.g;
+	color[2] = tmp_color.b;
+}
+
+void A1::saveColor(int selected_obj, float * color) {
+	vec3 tmp_color(color[0], color[1], color[2]);
+	switch (selected_obj) {
+		// block
+		case 0:
+			block_color = tmp_color;
+			break;
+		case 1:
+			floor_color = tmp_color;
+			break;
+		case 2:
+			avatar_color = tmp_color;
+			break;
+		default:
+			break;
+	}
 }
 
 void A1::initGrid()
@@ -134,6 +186,117 @@ void A1::initGrid()
 	CHECK_GL_ERRORS;
 }
 
+void A1::initFloor()
+{
+	size_t sz = 3 * 2 * 3;
+
+	float verts[] = {
+		0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f,
+
+		0.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f,
+	};
+
+	// Create the vertex array to record buffer assignments.
+	glGenVertexArrays( 1, &m_floor_vao );
+	glBindVertexArray( m_floor_vao );
+
+	// Create the cube vertex buffer
+	glGenBuffers( 1, &m_floor_vbo );
+	glBindBuffer( GL_ARRAY_BUFFER, m_floor_vbo );
+	glBufferData( GL_ARRAY_BUFFER, sz*sizeof(float),
+		verts, GL_STATIC_DRAW );
+
+	// Specify the means of extracting the position values properly.
+	GLint posAttrib = m_shader.getAttribLocation( "position" );
+	glEnableVertexAttribArray( posAttrib );
+	glVertexAttribPointer( posAttrib, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
+
+	// Reset state to prevent rogue code from messing with *my* 
+	// stuff!
+	glBindVertexArray( 0 );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+
+	CHECK_GL_ERRORS;
+}
+
+void A1::initCube()
+{
+	float verts[] = {
+		// front bottom left
+		0.0f, 0.0f, 1.0f,
+		// front top left
+		0.0f, block_height, 1.0f,
+		// front top right
+		1.0f, block_height, 1.0f,
+		// front bottom right
+		1.0f, 0.0f, 1.0f,
+		// back top right
+		1.0f, block_height, 0.0f,
+		// back bottom right
+		1.0f, 0.0f, 0.0f,
+		// back top left
+		0.0f, block_height, 0.0f,
+		// back bottom left
+		0.0f, 0.0f, 0.0f
+	};
+
+	unsigned int indices[] = {
+		// front
+		0, 1, 2,
+		0, 2, 3,
+		// left
+		2, 3, 4,
+		3, 4, 5,
+		// back
+		4, 5, 6,
+		5, 6, 7,
+		// right
+		0, 1, 6,
+		0, 6, 7,
+		// top
+		1, 2, 6,
+		2, 4 ,6,
+		// bottom
+		0, 3, 7,
+		3, 5, 7
+	};
+
+	// Create the vertex array to record buffer assignments.
+	glGenVertexArrays( 1, &m_cube_vao );
+	glBindVertexArray( m_cube_vao );
+
+
+	// Create the cube vertex buffer
+	glGenBuffers( 1, &m_cube_vbo );
+	glBindBuffer( GL_ARRAY_BUFFER, m_cube_vbo );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(verts),
+		verts, GL_STATIC_DRAW );
+
+	// Create the cube element buffer
+	glGenBuffers( 1, &m_cube_ebo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_cube_ebo );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(indices),
+		indices, GL_STATIC_DRAW );
+
+	// Specify the means of extracting the position values properly.
+	GLint posAttrib = m_shader.getAttribLocation( "position" );
+	glEnableVertexAttribArray( posAttrib );
+	glVertexAttribPointer( posAttrib, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
+	
+	// Reset state to prevent rogue code from messing with *my* 
+	// stuff!
+	glBindVertexArray( 0 );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+
+	CHECK_GL_ERRORS;
+}
+
 //----------------------------------------------------------------------------------------
 /*
  * Called once per frame, before guiLogic().
@@ -165,6 +328,12 @@ void A1::guiLogic()
 			glfwSetWindowShouldClose(m_window, GL_TRUE);
 		}
 
+		if( ImGui::Button( "Reset" ) ) {
+			maze.reset();
+			initSettings();
+			maze.printMaze();
+		}
+
 		// Eventually you'll create multiple colour widgets with
 		// radio buttons.  If you use PushID/PopID to give them all
 		// unique IDs, then ImGui will be able to keep them separate.
@@ -174,11 +343,30 @@ void A1::guiLogic()
 		// Prefixing a widget name with "##" keeps it from being
 		// displayed.
 
+		ImGui::PushID("widget");
+		static int selected_obj = 0;
+        ImGui::RadioButton("Block", &selected_obj, 0); ImGui::SameLine();
+        ImGui::RadioButton("Floor", &selected_obj, 1); ImGui::SameLine();
+        ImGui::RadioButton("Avatar", &selected_obj, 2);
+		ImGui::PopID();
+
+		if (last_obj != selected_obj) {
+
+			// save original color to current selected_object
+			saveColor(last_obj, origin_colour);
+
+			// load  new selected_object's information to original color and color variable
+			loadColor(selected_obj, colour);
+			loadColor(selected_obj, origin_colour);
+			last_obj = selected_obj;
+		}
+
 		ImGui::PushID( 0 );
 		ImGui::ColorEdit3( "##Colour", colour );
 		ImGui::SameLine();
 		if( ImGui::RadioButton( "##Col", &current_col, 0 ) ) {
 			// Select this colour.
+			loadColor(selected_obj, origin_colour);
 		}
 		ImGui::PopID();
 
@@ -224,6 +412,30 @@ void A1::draw()
 		glDrawArrays( GL_LINES, 0, (3+DIM)*4 );
 
 		// Draw the cubes
+		mat4 origin = W;
+
+		for (int i = 0; i < DIM + 2; i++) {
+			for (int j = 0; j < DIM + 2; j++) {
+				W = glm::translate( W, vec3( i - 1, 0, j - 1) );
+				glUniformMatrix4fv( M_uni, 1, GL_FALSE, value_ptr( W ) );
+				// cout << "draw" << endl;
+				if (i-1 == -1 || j - 1 == -1 || i - 1 == DIM || j - 1 == DIM 
+				|| maze.getValue(i-1,j-1) == 0) {
+					// draw floors
+					glBindVertexArray( m_floor_vao );
+					glUniform3f( col_uni, floor_color.r, floor_color.g, floor_color.b );
+					glDrawArrays( GL_TRIANGLES, 0, 6 );
+					// cout << "draw floor" << endl;
+				} else {
+					// draw cubes
+					glBindVertexArray( m_cube_vao );
+					glUniform3f( col_uni, block_color.r, block_color.g, block_color.b );
+					glDrawElements( GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+					// cout << "draw cube" << endl;
+				}
+				W = origin;
+			}
+		}
 		// Highlight the active square.
 	m_shader.disable();
 
@@ -322,6 +534,27 @@ bool A1::keyInputEvent(int key, int action, int mods) {
 	// Fill in with event handling code...
 	if( action == GLFW_PRESS ) {
 		// Respond to some key events.
+		if (key == GLFW_KEY_Q) {
+			cout << "Q key pressed" << endl;
+			glfwSetWindowShouldClose(m_window, GL_TRUE);
+			eventHandled = true;
+		}
+		if (key == GLFW_KEY_R) {
+			cout << "R key pressed" << endl;
+			maze.reset();
+			initSettings();
+			eventHandled = true;
+		}
+		if (key == GLFW_KEY_SPACE) {
+			if (block_height < MAX_HEIGHT) block_height += 0.1f;
+			initCube();
+			eventHandled = true;
+		}
+		if (key == GLFW_KEY_BACKSPACE) {
+			if (block_height > MIN_HEIGHT) block_height -= 0.1f;
+			initCube();
+			eventHandled = true;
+		}
 	}
 
 	return eventHandled;
