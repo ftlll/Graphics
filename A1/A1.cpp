@@ -20,6 +20,9 @@ static const size_t DIM = 16;
 const float PI = 3.14159265f;
 const float MIN_HEIGHT = 0.5f;
 const float MAX_HEIGHT = 1.5f;
+const float MIN_SCALE = 0.5f;
+const float MAX_SCALE = 1.5f;
+const float SCALE_RATE = 0.1f;
 
 //----------------------------------------------------------------------------------------
 // Constructor
@@ -53,7 +56,19 @@ void A1::init()
 	initSettings();
 	maze.digMaze();
 	maze.printMaze();
-	
+
+	// find avatar start position
+	for (size_t i = 0; i < DIM; i++) {
+		for (size_t j = 0; j < DIM; j++) {
+			// find the entrance
+			if (i == DIM-1 || i == 0 || j == DIM-1 || j == 0) {
+				if (maze.getValue(i,j) == 0) {
+					avatar_pos = vec3(i,0,j);
+				}
+			}
+		}
+	}
+
 	// Set the background colour.
 	glClearColor( 0.3, 0.5, 0.7, 1.0 );
 
@@ -74,6 +89,7 @@ void A1::init()
 	initGrid();
 	initFloor();
 	initCube();
+	initAvatar();
 
 	// Set up initial view and projection matrices (need to do this here,
 	// since it depends on the GLFW window being set up correctly).
@@ -92,9 +108,13 @@ void A1::initSettings()
 {
 	last_obj= -1;
 	block_height = 1.0f;
+	avatar_pos = vec3(0.0f, 0.0f, 0.0f);
 	block_color = vec3(0.0f, 1.0f, 1.0f);
 	floor_color = vec3(0.0f, 0.5f, 1.0f);
 	avatar_color = vec3(1.0f, 0.0f, 0.0f);
+	scale = 1.0f;
+	rotation = 0.0f;
+	rotate_rate = 0.0f;
 }
 
 void A1::loadColor(int selected_obj, float * color) {
@@ -119,6 +139,7 @@ void A1::loadColor(int selected_obj, float * color) {
 
 void A1::saveColor(int selected_obj, float * color) {
 	vec3 tmp_color(color[0], color[1], color[2]);
+	// cout << color[0] << " " << color[1] << " " << color[2] << endl;
 	switch (selected_obj) {
 		// block
 		case 0:
@@ -297,6 +318,56 @@ void A1::initCube()
 	CHECK_GL_ERRORS;
 }
 
+void A1::initAvatar()
+{
+	float verts[] = {
+		0.0f, 1.0f, 0.0f,
+
+		1.0f, 1.0f, 0.0f,
+
+		0.5f, 1.0f, 1.0f,
+
+		0.5f, 0.1f, 0.5f 
+	};
+
+	unsigned int indices[] = {
+		0, 1, 2,
+		0, 1, 3,
+		0, 2, 3,
+		1, 2, 3,
+	};
+
+	// Create the vertex array to record buffer assignments.
+	glGenVertexArrays( 1, &m_avatar_vao );
+	glBindVertexArray( m_avatar_vao );
+
+
+	// Create the cube vertex buffer
+	glGenBuffers( 1, &m_avatar_vbo );
+	glBindBuffer( GL_ARRAY_BUFFER, m_avatar_vbo );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(verts),
+		verts, GL_STATIC_DRAW );
+
+	// Create the cube element buffer
+	glGenBuffers( 1, &m_avatar_ebo );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_avatar_ebo );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(indices),
+		indices, GL_STATIC_DRAW );
+
+	// Specify the means of extracting the position values properly.
+	GLint posAttrib = m_shader.getAttribLocation( "position" );
+	glEnableVertexAttribArray( posAttrib );
+	glVertexAttribPointer( posAttrib, 3, GL_FLOAT, GL_FALSE, 0, nullptr );
+	
+	// Reset state to prevent rogue code from messing with *my* 
+	// stuff!
+	glBindVertexArray( 0 );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+
+	CHECK_GL_ERRORS;
+}
+
 //----------------------------------------------------------------------------------------
 /*
  * Called once per frame, before guiLogic().
@@ -304,6 +375,7 @@ void A1::initCube()
 void A1::appLogic()
 {
 	// Place per frame, application logic here ...
+	rotation += rotate_rate;
 }
 
 //----------------------------------------------------------------------------------------
@@ -397,6 +469,8 @@ void A1::draw()
 {
 	// Create a global transformation for the model (centre it).
 	mat4 W;
+	W = glm::scale(W, vec3(scale));
+	W = glm::rotate( W, 2 * PI * rotation, vec3( 0, 1, 0) );
 	W = glm::translate( W, vec3( -float(DIM)/2.0f, 0, -float(DIM)/2.0f ) );
 
 	m_shader.enable();
@@ -436,6 +510,14 @@ void A1::draw()
 				W = origin;
 			}
 		}
+
+		// draw avatar
+		W = glm::translate( W, avatar_pos );
+		glUniformMatrix4fv( M_uni, 1, GL_FALSE, value_ptr( W ) );
+		glBindVertexArray( m_avatar_vao );
+		glUniform3f( col_uni, avatar_color.r, avatar_color.g, avatar_color.b );
+		glDrawElements( GL_TRIANGLES, 16, GL_UNSIGNED_INT, 0);
+		W = origin;
 		// Highlight the active square.
 	m_shader.disable();
 
@@ -508,6 +590,11 @@ bool A1::mouseScrollEvent(double xOffSet, double yOffSet) {
 	bool eventHandled(false);
 
 	// Zoom in or out.
+	if (yOffSet > 0) {
+		if (scale < MAX_SCALE) scale += SCALE_RATE;
+	} else {
+		if (scale > MIN_SCALE) scale -= SCALE_RATE;
+	}
 
 	return eventHandled;
 }
@@ -535,14 +622,19 @@ bool A1::keyInputEvent(int key, int action, int mods) {
 	if( action == GLFW_PRESS ) {
 		// Respond to some key events.
 		if (key == GLFW_KEY_Q) {
-			cout << "Q key pressed" << endl;
+			// cout << "Q key pressed" << endl;
 			glfwSetWindowShouldClose(m_window, GL_TRUE);
 			eventHandled = true;
 		}
 		if (key == GLFW_KEY_R) {
-			cout << "R key pressed" << endl;
+			// cout << "R key pressed" << endl;
 			maze.reset();
 			initSettings();
+			eventHandled = true;
+		}
+		if (key == GLFW_KEY_D) {
+			// cout << "D key pressed" << endl;
+			maze.digMaze();
 			eventHandled = true;
 		}
 		if (key == GLFW_KEY_SPACE) {
@@ -553,6 +645,34 @@ bool A1::keyInputEvent(int key, int action, int mods) {
 		if (key == GLFW_KEY_BACKSPACE) {
 			if (block_height > MIN_HEIGHT) block_height -= 0.1f;
 			initCube();
+			eventHandled = true;
+		}
+		if (key == GLFW_KEY_UP && avatar_pos.z - 1 >= -1) {
+			// cout << "UP key pressed" << endl;
+			if (maze.getValue(avatar_pos.x,avatar_pos.z - 1) == 0) {
+				avatar_pos.z -= 1;
+			}
+			eventHandled = true;
+		}
+		if (key == GLFW_KEY_DOWN && avatar_pos.z + 1 <= DIM) {
+			// cout << "DOWN key pressed" << endl;
+			if (maze.getValue(avatar_pos.x,avatar_pos.z + 1) == 0) {
+				avatar_pos.z += 1;
+			}
+			eventHandled = true;
+		}
+		if (key == GLFW_KEY_LEFT && avatar_pos.x - 1 >= -1) {
+			// cout << "LEFT key pressed" << endl;
+			if (maze.getValue(avatar_pos.x - 1,avatar_pos.z) == 0) {
+				avatar_pos.x -= 1;
+			}
+			eventHandled = true;
+		}
+		if (key == GLFW_KEY_RIGHT && avatar_pos.x + 1 <= DIM) {
+			// cout << "RIGHT key pressed" << endl;
+			if (maze.getValue(avatar_pos.x + 1,avatar_pos.z) == 0) {
+				avatar_pos.x += 1;
+			}
 			eventHandled = true;
 		}
 	}

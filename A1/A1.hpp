@@ -28,10 +28,11 @@ protected:
 	virtual bool keyInputEvent(int key, int action, int mods) override;
 
 private:
+	void initSettings();
 	void initGrid();
 	void initFloor();
 	void initCube();
-	void initSettings();
+	void initAvatar();
 	Maze maze;
 
 	// Fields related to the shader and uniforms.
@@ -53,6 +54,7 @@ private:
 	// Fields related to Avatar geometry.
 	GLuint m_avatar_vao; // Vertex Array Object
 	GLuint m_avatar_vbo; // Vertex Buffer Object
+	GLuint m_avatar_ebo; // Element Buffer Object
 
 	// Fields related to Floor geometry.
 	GLuint m_floor_vao; // Vertex Array Object
@@ -72,7 +74,12 @@ private:
 
 	float colour[3];
 	float origin_colour[3];
+	glm::vec3 avatar_pos;
+
 	int current_col;
 	float block_height;
 	int last_obj;
+	float scale;
+	float rotation;
+	float rotate_rate;
 };
